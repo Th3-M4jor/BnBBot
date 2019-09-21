@@ -1,0 +1,9 @@
+*.so
+obj/*
+bin/*
+.vscode/*
+config.json
+chips.json
+naviCust.json
+virusCompendium.json
+specialChips.txt
