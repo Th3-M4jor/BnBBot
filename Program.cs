@@ -20,6 +20,8 @@ namespace csharp
 
         private static bool sentStartupMessage = false;
 
+        public string helpText { get; private set; }
+
         public static void Main(string[] args)
         => new Program().MainAsync(args).GetAwaiter().GetResult();
         public async Task MainAsync(string[] args)
@@ -34,6 +36,7 @@ namespace csharp
             await Task.WhenAll(tasks);
             _client.MessageReceived += MessageRecieved;
             _client.Ready += botReady;
+            
             //await ChipImages.Instance.loadChipImages();
             await _client.LoginAsync(TokenType.Bot, config.instance.Token);
             await _client.StartAsync();
@@ -50,10 +53,12 @@ namespace csharp
 
         private async Task botReady()
         {
+            await _client.SetGameAsync("%help for a list of commands");
             if (sentStartupMessage)
             {
                 return;
             }
+            this.helpText = await File.ReadAllTextAsync("./help.txt");
             var major = _client.GetUser(config.instance.MajorIDConverted);
             if (major == null)
             {
@@ -208,6 +213,9 @@ namespace csharp
                         await VirusCompendium.instance.sendVirusElements(message, args[1]);
                         break;
                     }
+                case "help":
+                    await message.Author.SendMessageAsync(this.helpText);
+                    return;
                 default:
                     await Library.instance.sendChip(message, args[0]);
                     return;
