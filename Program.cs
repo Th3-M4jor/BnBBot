@@ -215,10 +215,10 @@ namespace csharp
                     }
                 case "help":
                     await message.Author.SendMessageAsync(this.helpText);
-                    return;
+                    break;
                 default:
                     await Library.instance.sendChip(message, args[0]);
-                    return;
+                    break;
             }
         }
 
