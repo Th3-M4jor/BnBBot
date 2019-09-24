@@ -12,7 +12,10 @@ do
         break;
     elif [ $res -eq 42 ]
     then
-        echo "%restart command was recieved, restarting";
+        echo "%restart command was recieved, updating";
+        git pull;
+        res=$?
+        dotnet build --configuration Release;
     else
         echo "bot crashed, restarting";
     fi

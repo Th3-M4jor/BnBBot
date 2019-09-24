@@ -25,7 +25,7 @@ BnBBot command list:
 
 %restart
     (Jin and Major only)
-    Restart's BnBBot
+    Restarts BnBBot and has him check for code updates
 
 %roll
     roll a given number of dice, ex "%roll 2d20"

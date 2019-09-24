@@ -44,13 +44,13 @@ namespace csharp
         /// <summary>Roll</summary>
         /// <param name="s">string to be evaluated</param>
         /// <returns>result of evaluated string</returns>
-        public uint R(string s, ref List<uint> rolledSoFar)
+        public long R(string s, ref List<long> rolledSoFar)
         {
             if(randFreed == true)
             {
                 throw new Exception("resource closed");
             }
-            uint toReturn = 0;
+            long toReturn = 0;
 
             // Addition is lowest order of precedence
             var a = s.Split('+');
@@ -65,27 +65,34 @@ namespace csharp
             }
             else
             {
-                int AmtToRoll = 0;
+                long AmtToRoll = 0;
                 // Die definition is our highest order of precedence
                 var d = a[0].Split('d');
-
+                if(d.Length == 1)
+                {
+                    if(long.TryParse(d[0], out long AmtToAdd))
+                    {
+                        rolledSoFar.Add(AmtToAdd);
+                        return (uint) (toReturn + AmtToAdd); 
+                    }
+                }
                 // This operand will be our die count, static digits, or else something we don't understand
-                if (!int.TryParse(d[0].Trim(), out AmtToRoll))
+                if (!long.TryParse(d[0].Trim(), out AmtToRoll))
                     AmtToRoll = 0;
 
-                int f;
+                long f;
 
                 // Multiple definitions ("2d6d8") iterate through left-to-right: (2d6)d8
-                for (int i = 1; i < d.Count(); i++)
+                for (long i = 1; i < d.Count(); i++)
                 {
                     // If we don't have a right side (face count), assume 6
-                    if (!int.TryParse(d[i].Trim(), out f))
+                    if (!long.TryParse(d[i].Trim(), out f))
                         f = 6;
 
-                    uint u = 0;
+                    long u = 0;
 
                     // If we don't have a die count, use 1
-                    for (int j = 0; j < (AmtToRoll == 0 ? 1 : AmtToRoll); j++)
+                    for (long j = 0; j < (AmtToRoll == 0 ? 1 : AmtToRoll); j++)
                     {
                         /*byte[] arrToFill = new byte[sizeof(int)];
                         
@@ -103,7 +110,7 @@ namespace csharp
                         int numToAdd = (BitConverter.ToInt32(arrToFill, 0) % f);
                         if (numToAdd < 0) numToAdd *= -1;
                         rolledSoFar.Add(numToAdd + 1);*/
-                        var numToAdd = (uint)(getRand(randPtr) % f + 1);
+                        var numToAdd = (getRand(randPtr) % f + 1);
                         rolledSoFar.Add(numToAdd);
 
                         u += numToAdd;

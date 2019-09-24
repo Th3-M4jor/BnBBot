@@ -20,8 +20,8 @@ namespace csharp
         {
             var joinedArgs = (new ArraySegment<string>(args, 1, args.Length - 1));
             var toRoll = string.Join(' ', joinedArgs).ToLower();
-            List<uint> totalRolls = new List<uint>();
-            uint result = die.R(toRoll, ref totalRolls);
+            List<long> totalRolls = new List<long>();
+            long result = die.R(toRoll, ref totalRolls);
             string eachRoll = string.Join(", " , totalRolls.Select(x => x.ToString()).ToArray());
             if(eachRoll.Length > 1900)
             {
@@ -42,9 +42,9 @@ namespace csharp
 
         public async Task rollStats(SocketMessage message)
         {
-            uint[] rolls = new uint[4];
-            uint[] stats = new uint[6];
-            var ignoreList = new List<uint>();
+            long[] rolls = new long[4];
+            long[] stats = new long[6];
+            var ignoreList = new List<long>();
             for (int i = 0; i < 6; i++)
             {
                 ignoreList.Clear();
@@ -53,7 +53,7 @@ namespace csharp
                     rolls[j] = die.R("1d6", ref ignoreList);
                 }
                 int toSkip = findIndexOfSmallest(ref rolls);
-                uint sum = 0;
+                long sum = 0;
                 for(int j = 0; j < 4; j++)
                 {
                     if(j == toSkip) continue;
@@ -69,13 +69,14 @@ namespace csharp
 
         }
 
-        private int findIndexOfSmallest(ref uint[] toCheck)
+        private int findIndexOfSmallest<T>(ref T[] toCheck) where T : IComparable<T>
         {
             int index = 0;
 
             for (int i = 1; i < toCheck.Length; i++)
             {
-                if (toCheck[i] < toCheck[index])
+                //if (toCheck[i] < toCheck[index])
+                if(toCheck[i].CompareTo(toCheck[index]) < 0)
                     index = i;
             }
             return index;
