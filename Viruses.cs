@@ -38,8 +38,10 @@ namespace csharp
         public const string virusRegex = @"((.+)\s\((\w+)\))";
         public const string crRegex = @"CR\s+(\d+)";
 
-        private Regex virusCheck;
-        private Regex crCheck;
+        private readonly Regex virusCheck;
+        private readonly Regex crCheck;
+
+        public byte HighestCR { get; private set; }
 
         private ConcurrentDictionary<string, Virus> compendium;
 
@@ -47,6 +49,7 @@ namespace csharp
         {
             virusCheck = new Regex(virusRegex, RegexOptions.ECMAScript);
             crCheck = new Regex(crRegex, RegexOptions.ECMAScript);
+            HighestCR = 0;
         }
 
         public async Task loadViruses(SocketMessage message = null)
@@ -131,6 +134,7 @@ namespace csharp
                 await message.Channel.SendMessageAsync(reply);
             }
             else System.Console.WriteLine(reply);
+            HighestCR = currentCR;
 #if !DEBUG
             var toConvert = (from kvp in this.compendium select kvp.Value).OrderBy(virus => virus.CR).ThenBy(virus => virus.Name);
             string toWrite = JsonConvert.SerializeObject(toConvert, Formatting.Indented);
@@ -142,8 +146,16 @@ namespace csharp
             Console.WriteLine(string.Join(", ", duplicates));
         }
 
-        public async Task sendVirus(SocketMessage message, string name)
+        public async Task SendVirus(SocketMessage message, string[] args)
         {
+            if (args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify a virus name");
+                return;
+            }
+            args = args.Skip(1).Take(args.Length - 1).ToArray();
+            string name = string.Join(" ", args);
+
             bool exists = this.compendium.TryGetValue(name.ToLower(), out Virus foundVirus);
             if (exists)
             {
@@ -176,11 +188,16 @@ namespace csharp
 
         }
 
-        public async Task sendCR(SocketMessage message, string name)
+        public async Task SendCR(SocketMessage message, string[] args)
         {
-            if (!int.TryParse(name, out int CRNum))
+            if(args.Length < 2)
             {
-                await message.Channel.SendMessageAsync("That is not a valid number");
+                await message.Channel.SendMessageAsync("You must specify a CR");
+                return;
+            }
+            if (!int.TryParse(args[1], out int CRNum) || CRNum > HighestCR)
+            {
+                await message.Channel.SendMessageAsync("That is not a valid number, or there are no viruses in that CR yet");
                 return;
             }
             var virusList = (from kvp in compendium.AsParallel().
@@ -197,7 +214,7 @@ namespace csharp
             }
         }
 
-        public async Task randomEncounter(SocketMessage message, string[] args)
+        public async Task RandomEncounter(SocketMessage message, string[] args)
         {
             if (args.Length < 3)
             {
@@ -216,7 +233,7 @@ namespace csharp
             bool isSingleCR = uint.TryParse(args[1], out uint crNum);
             if (isSingleCR)
             {
-                await sendSingleCR(message, numViruses, crNum);
+                await SendSingleCR(message, numViruses, crNum);
             }
             else
             {
@@ -235,13 +252,13 @@ namespace csharp
                 {
                     uint temp = lowCRNum;
                     lowCRNum = highCRNum;
-                    highCRNum = lowCRNum;
+                    highCRNum = temp;
                 }
-                await sendCRRange(message, numViruses, lowCRNum, highCRNum);
+                await SendCRRange(message, numViruses, lowCRNum, highCRNum);
             }
         }
 
-        private async Task sendSingleCR(SocketMessage message, uint numViruses, uint CR)
+        private async Task SendSingleCR(SocketMessage message, uint numViruses, uint CR)
         {
             var toSelect = (from kvp in compendium.AsParallel()
                 .WithMergeOptions(ParallelMergeOptions.FullyBuffered)
@@ -261,7 +278,7 @@ namespace csharp
             await Library.SendStringArrayAsMessage(message, chosenViruses);
         }
 
-        private async Task sendCRRange(SocketMessage message, uint numViruses, uint lowCR, uint highCR)
+        private async Task SendCRRange(SocketMessage message, uint numViruses, uint lowCR, uint highCR)
         {
             var toSelect = (from kvp in compendium.AsParallel()
                .WithMergeOptions(ParallelMergeOptions.FullyBuffered)
@@ -281,9 +298,14 @@ namespace csharp
             await Library.SendStringArrayAsMessage(message, chosenViruses);
         }
 
-        public async Task sendVirusElements(SocketMessage message, string arg)
+        public async Task SendVirusElements(SocketMessage message, string[] args)
         {
-            arg = arg.ToLower();
+            if (args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify an element");
+                return;
+            }
+            string arg = args[1].ToLower();
             var toSend = (from kvp in compendium.AsParallel()
                 .WithMergeOptions(ParallelMergeOptions.FullyBuffered)
                             where kvp.Value.Element.ToLower() == arg

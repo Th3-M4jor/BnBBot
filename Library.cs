@@ -124,6 +124,11 @@ namespace csharp
 
         public async Task SendChip(Discord.WebSocket.SocketMessage message, string[] args, bool defaultArg = false)
         {
+            if(!defaultArg && args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify a BattleChip name");
+                return;
+            }
             string name = defaultArg ? args[0] : args[1];
             bool exists = this.chipLibrary.TryGetValue(name.ToLower(), out chip Value);
 
@@ -167,12 +172,18 @@ namespace csharp
 
         }
 
-        public async Task SearchByElement(SocketMessage message, string elementToFind)
+        public async Task SearchByElement(SocketMessage message, string[] args)
         {
+            if (args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify an element");
+                return;
+            }
+
             var chipList = (from kvp in chipLibrary.AsParallel().
                 WithMergeOptions(ParallelMergeOptions.FullyBuffered)
                             where Array.Exists(kvp.Value.Element,
-                                Element => Element.Equals(elementToFind, StringComparison.OrdinalIgnoreCase))
+                                Element => Element.Equals(args[1], StringComparison.OrdinalIgnoreCase))
                             select kvp.Value.Name).OrderBy(Name => Name).ToArray();
             if (chipList.Length == 0)
             {
@@ -184,12 +195,18 @@ namespace csharp
             }
         }
 
-        public async Task SearchBySkill(SocketMessage message, string skillToFind)
+        public async Task SearchBySkill(SocketMessage message, string[] args)
         {
+            if(args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify a skill name");
+                return;
+            }
+
             var chipList = (from kvp in chipLibrary.AsParallel().
                 WithMergeOptions(ParallelMergeOptions.FullyBuffered)
                             where Array.Exists(kvp.Value.Skill,
-                                Skill => Skill.Equals(skillToFind, StringComparison.OrdinalIgnoreCase))
+                                Skill => Skill.Equals(args[1], StringComparison.OrdinalIgnoreCase))
                             select kvp.Value.Name).OrderBy(Name => Name).ToArray();
             if (chipList.Length == 0)
             {
@@ -201,11 +218,16 @@ namespace csharp
             }
         }
 
-        public async Task SearchBySkillCheck(SocketMessage message, string skillToFind)
+        public async Task SearchBySkillCheck(SocketMessage message, string[] args)
         {
+            if (args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify an argument");
+                return;
+            }
             var chipList = (from kvp in chipLibrary.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
-                            where kvp.Value.SkillTarget.Equals(skillToFind, StringComparison.OrdinalIgnoreCase) ||
-                                kvp.Value.SkillUser.Equals(skillToFind, StringComparison.OrdinalIgnoreCase)
+                            where kvp.Value.SkillTarget.Equals(args[1], StringComparison.OrdinalIgnoreCase) ||
+                                kvp.Value.SkillUser.Equals(args[1], StringComparison.OrdinalIgnoreCase)
                             select kvp.Value.Name).OrderBy(Name => Name).ToArray();
             if (chipList.Length == 0)
             {
@@ -217,10 +239,15 @@ namespace csharp
             }
         }
 
-        public async Task SearchBySkillUser(SocketMessage message, string skillToFind)
+        public async Task SearchBySkillUser(SocketMessage message, string[] args)
         {
+            if (args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify a skill");
+                return;
+            }
             var chipList = (from kvp in chipLibrary.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
-                            where kvp.Value.SkillUser.Equals(skillToFind, StringComparison.OrdinalIgnoreCase)
+                            where kvp.Value.SkillUser.Equals(args[1], StringComparison.OrdinalIgnoreCase)
                             select kvp.Value.Name).OrderBy(Name => Name).ToArray();
             if (chipList.Length == 0)
             {
@@ -232,10 +259,15 @@ namespace csharp
             }
         }
 
-        public async Task SearchBySkillTarget(SocketMessage message, string skillToFind)
+        public async Task SearchBySkillTarget(SocketMessage message, string[] args)
         {
+            if (args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify an argument");
+                return;
+            }
             var chipList = (from kvp in chipLibrary.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
-                            where kvp.Value.SkillTarget.Equals(skillToFind, StringComparison.OrdinalIgnoreCase)
+                            where kvp.Value.SkillTarget.Equals(args[1], StringComparison.OrdinalIgnoreCase)
                             select kvp.Value.Name).OrderBy(Name => Name).ToArray();
             if (chipList.Length == 0)
             {

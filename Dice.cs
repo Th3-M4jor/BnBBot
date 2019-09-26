@@ -16,8 +16,13 @@ namespace csharp
             die = new DiceExpression();
         }
 
-        public async Task rollDice(SocketMessage message, string[] args)
+        public async Task RollDice(SocketMessage message, string[] args)
         {
+            if (args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify a number of dice to roll");
+                return;
+            }
             var joinedArgs = (new ArraySegment<string>(args, 1, args.Length - 1));
             var toRoll = string.Join(' ', joinedArgs).ToLower();
             List<long> totalRolls = new List<long>();

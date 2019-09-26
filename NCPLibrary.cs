@@ -101,8 +101,17 @@ namespace csharp
 #endif
         }
 
-        public async Task sendNCP(Discord.WebSocket.SocketMessage message, string name)
+        public async Task SendNCP(SocketMessage message, string[] args)
         {
+            if (args.Length < 2)
+            {
+                await message.Channel.SendMessageAsync("You must specify an argument");
+                return;
+            }
+
+            args = args.Skip(1).Take(args.Length - 1).ToArray();
+            string name = string.Join(" ", args);
+
             bool exists = this.NCPs.TryGetValue(name.ToLower(), out NCP Value);
 
             if (exists)
