@@ -23,9 +23,9 @@ namespace csharp
         public static readonly System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
         private ConcurrentDictionary<string, chip> chipLibrary;
 
-        private Regex chipTest;
+        private readonly Regex chipTest;
 
-        private Regex saveRegexTest;
+        private readonly Regex saveRegexTest;
 
 
         private Library()
@@ -35,7 +35,7 @@ namespace csharp
             saveRegexTest = new Regex(saveRegexVal, RegexOptions.ECMAScript);
         }
 
-        public async Task loadChips(Discord.WebSocket.SocketMessage message = null)
+        public async Task LoadChips(Discord.WebSocket.SocketMessage message = null)
         {
             //chipLibrary.Clear();
             ConcurrentDictionary<string, chip> newChipLibrary = new ConcurrentDictionary<string, chip>();
@@ -122,8 +122,9 @@ namespace csharp
 
         }
 
-        public async Task sendChip(Discord.WebSocket.SocketMessage message, string name)
+        public async Task SendChip(Discord.WebSocket.SocketMessage message, string[] args, bool defaultArg = false)
         {
+            string name = defaultArg ? args[0] : args[1];
             bool exists = this.chipLibrary.TryGetValue(name.ToLower(), out chip Value);
 
             if (exists)
@@ -159,14 +160,14 @@ namespace csharp
 
                 default:
                     {
-                        await sendStringArrayAsMessage(message, chipList);
+                        await SendStringArrayAsMessage(message, chipList);
                         return;
                     }
             }
 
         }
 
-        public async Task searchByElement(SocketMessage message, string elementToFind)
+        public async Task SearchByElement(SocketMessage message, string elementToFind)
         {
             var chipList = (from kvp in chipLibrary.AsParallel().
                 WithMergeOptions(ParallelMergeOptions.FullyBuffered)
@@ -179,11 +180,11 @@ namespace csharp
             }
             else
             {
-                await sendStringArrayAsMessage(message, chipList);
+                await SendStringArrayAsMessage(message, chipList);
             }
         }
 
-        public async Task searchBySkill(SocketMessage message, string skillToFind)
+        public async Task SearchBySkill(SocketMessage message, string skillToFind)
         {
             var chipList = (from kvp in chipLibrary.AsParallel().
                 WithMergeOptions(ParallelMergeOptions.FullyBuffered)
@@ -196,11 +197,11 @@ namespace csharp
             }
             else
             {
-                await sendStringArrayAsMessage(message, chipList);
+                await SendStringArrayAsMessage(message, chipList);
             }
         }
 
-        public async Task searchBySkillCheck(SocketMessage message, string skillToFind)
+        public async Task SearchBySkillCheck(SocketMessage message, string skillToFind)
         {
             var chipList = (from kvp in chipLibrary.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
                             where kvp.Value.SkillTarget.Equals(skillToFind, StringComparison.OrdinalIgnoreCase) ||
@@ -212,11 +213,11 @@ namespace csharp
             }
             else
             {
-                await sendStringArrayAsMessage(message, chipList);
+                await SendStringArrayAsMessage(message, chipList);
             }
         }
 
-        public async Task searchBySkillUser(SocketMessage message, string skillToFind)
+        public async Task SearchBySkillUser(SocketMessage message, string skillToFind)
         {
             var chipList = (from kvp in chipLibrary.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
                             where kvp.Value.SkillUser.Equals(skillToFind, StringComparison.OrdinalIgnoreCase)
@@ -227,11 +228,11 @@ namespace csharp
             }
             else
             {
-                await sendStringArrayAsMessage(message, chipList);
+                await SendStringArrayAsMessage(message, chipList);
             }
         }
 
-        public async Task searchBySkillTarget(SocketMessage message, string skillToFind)
+        public async Task SearchBySkillTarget(SocketMessage message, string skillToFind)
         {
             var chipList = (from kvp in chipLibrary.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
                             where kvp.Value.SkillTarget.Equals(skillToFind, StringComparison.OrdinalIgnoreCase)
@@ -242,14 +243,16 @@ namespace csharp
             }
             else
             {
-                await sendStringArrayAsMessage(message, chipList);
+                await SendStringArrayAsMessage(message, chipList);
             }
         }
 
-        private async Task sendChipAsEmbed(SocketMessage message, chip toSend)
+        private async Task SendChipAsEmbed(SocketMessage message, chip toSend)
         {
-            var embed = new Discord.EmbedBuilder();
-            embed.Title = toSend.Name;
+            var embed = new Discord.EmbedBuilder
+            {
+                Title = toSend.Name
+            };
             if (toSend.Type == "Mega")
             {
                 embed.Color = new Color(0x90F8F8); //Megachip Blue
@@ -290,7 +293,7 @@ namespace csharp
             imageStream.Dispose();
         }
 
-        public static async Task sendStringArrayAsMessage(SocketMessage message, string[] toSend)
+        public static async Task SendStringArrayAsMessage(SocketMessage message, string[] toSend)
         {
             StringBuilder builder = new StringBuilder();
             builder.Append(toSend[0]);
@@ -309,7 +312,7 @@ namespace csharp
 
         public static async Task<string> GetFileContents(string path)
         {
-            using (var stream = System.IO.File.OpenText(path))
+            using (var stream = File.OpenText(path))
             {
                 return await stream.ReadToEndAsync();
             }

@@ -170,7 +170,7 @@ namespace csharp
                         return;
                     }
                 default:
-                    await Library.sendStringArrayAsMessage(message, virusList);
+                    await Library.SendStringArrayAsMessage(message, virusList);
                     return;
             }
 
@@ -193,7 +193,7 @@ namespace csharp
             }
             else
             {
-                await Library.sendStringArrayAsMessage(message, virusList);
+                await Library.SendStringArrayAsMessage(message, virusList);
             }
         }
 
@@ -258,7 +258,7 @@ namespace csharp
                 uint randVal = Dice.instance.getRandomNum() % (uint)toSelect.Length;
                 chosenViruses[i] = toSelect[randVal];
             }
-            await Library.sendStringArrayAsMessage(message, chosenViruses);
+            await Library.SendStringArrayAsMessage(message, chosenViruses);
         }
 
         private async Task sendCRRange(SocketMessage message, uint numViruses, uint lowCR, uint highCR)
@@ -278,7 +278,7 @@ namespace csharp
                 uint randVal = Dice.instance.getRandomNum() % (uint)toSelect.Length;
                 chosenViruses[i] = toSelect[randVal];
             }
-            await Library.sendStringArrayAsMessage(message, chosenViruses);
+            await Library.SendStringArrayAsMessage(message, chosenViruses);
         }
 
         public async Task sendVirusElements(SocketMessage message, string arg)
@@ -293,7 +293,7 @@ namespace csharp
                 await message.Channel.SendMessageAsync("Nothing matched your search");
                 return;
             }
-            await Library.sendStringArrayAsMessage(message, toSend);
+            await Library.SendStringArrayAsMessage(message, toSend);
         }
 
     }

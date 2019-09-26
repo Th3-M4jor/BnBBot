@@ -137,7 +137,7 @@ namespace csharp
 
                 default:
                     {
-                        await Library.sendStringArrayAsMessage(message, NCPList);
+                        await Library.SendStringArrayAsMessage(message, NCPList);
                         return;
                     }
             }

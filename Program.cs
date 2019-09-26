@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using System.IO;
-using Newtonsoft.Json;
 using System.Linq;
 
 namespace csharp
@@ -32,7 +31,7 @@ namespace csharp
 
             //await Library.instance.loadChips();
             //await NCPLibrary.instance.loadNCPs();
-            var tasks = reloadData();
+            var tasks = ReloadData();
             await Task.WhenAll(tasks);
             _client.MessageReceived += MessageRecieved;
             _client.Ready += botReady;
@@ -100,7 +99,7 @@ namespace csharp
                         await message.Channel.SendMessageAsync("You must specify an argument");
                         break;
                     }
-                    await Library.instance.sendChip(message, args[1]);
+                    await Library.instance.SendChip(message, args);
                     break;
                 case "ncp":
                     {
@@ -120,7 +119,7 @@ namespace csharp
                         await message.Channel.SendMessageAsync("You must specify an argument");
                         break;
                     }
-                    await Library.instance.searchBySkill(message, args[1]);
+                    await Library.instance.SearchBySkill(message, args[1]);
                     break;
                 case "element":
                     if (args.Length < 2)
@@ -128,7 +127,7 @@ namespace csharp
                         await message.Channel.SendMessageAsync("You must specify an argument");
                         break;
                     }
-                    await Library.instance.searchByElement(message, args[1]);
+                    await Library.instance.SearchByElement(message, args[1]);
                     break;
                 case "skilluser":
                     if (args.Length < 2)
@@ -136,7 +135,7 @@ namespace csharp
                         await message.Channel.SendMessageAsync("You must specify an argument");
                         break;
                     }
-                    await Library.instance.searchBySkillUser(message, args[1]);
+                    await Library.instance.SearchBySkillUser(message, args[1]);
                     break;
                 case "skillcheck":
                     if (args.Length < 2)
@@ -144,7 +143,7 @@ namespace csharp
                         await message.Channel.SendMessageAsync("You must specify an argument");
                         break;
                     }
-                    await Library.instance.searchBySkillCheck(message, args[1]);
+                    await Library.instance.SearchBySkillCheck(message, args[1]);
                     break;
                 case "skilltarget":
                     if (args.Length < 2)
@@ -152,13 +151,13 @@ namespace csharp
                         await message.Channel.SendMessageAsync("You must specify an argument");
                         break;
                     }
-                    await Library.instance.searchBySkillTarget(message, args[1]);
+                    await Library.instance.SearchBySkillTarget(message, args[1]);
                     break;
                 case "reload":
                     if (message.Author.Id == config.instance.MajorIDConverted ||
                             message.Author.Id == config.instance.JinIDConverted)
                     {
-                        reloadData(message);
+                        ReloadData(message);
                     }
                     break;
 
@@ -217,7 +216,7 @@ namespace csharp
                     await message.Author.SendMessageAsync(this.helpText);
                     break;
                 default:
-                    await Library.instance.sendChip(message, args[0]);
+                    await Library.instance.SendChip(message, args);
                     break;
             }
         }
@@ -236,14 +235,14 @@ namespace csharp
             }
         }
 
-        private Task[] reloadData(SocketMessage message = null)
+        private Task[] ReloadData(SocketMessage message = null)
         {
             Task[] toReturn = new Task[3];
             toReturn[0] = Task.Run(async () =>
                             {
                                 try
                                 {
-                                    await Library.instance.loadChips(message);
+                                    await Library.instance.LoadChips(message);
                                 }
                                 catch (Exception e)
                                 {
