@@ -146,7 +146,7 @@ namespace csharp
                     await message.Author.SendMessageAsync(this.HelpText);
                     break;
                 default:
-                    await Library.instance.SendChip(message, args);
+                    await Library.instance.SendChip(message, args, true);
                     break;
             }
         }
