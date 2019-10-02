@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Discord;
 using Discord.WebSocket;
 using System.IO;
@@ -19,6 +20,8 @@ namespace csharp
 
         private static bool sentStartupMessage = false;
 
+        private Dictionary<string, Func<SocketMessage, string[], Task>> commands;
+
         public string HelpText { get; private set; }
 
         public static void Main(string[] args)
@@ -31,11 +34,29 @@ namespace csharp
 
             //await Library.instance.loadChips();
             //await NCPLibrary.instance.loadNCPs();
-            var tasks = ReloadData();
-            await Task.WhenAll(tasks);
+            //var tasks = ReloadData();
+            //await Task.WhenAll(tasks);
+            await ReloadData();
             _client.MessageReceived += MessageRecieved;
             _client.Ready += botReady;
-
+            commands = new Dictionary<string, Func<SocketMessage, string[], Task>>();
+            commands.Add("die", ExitCheck);
+            commands.Add("chip",Library.instance.SendChip);
+            commands.Add("ncp", NCPLibrary.instance.SendNCP);
+            commands.Add("skill", Library.instance.SearchBySkill);
+            commands.Add("element", Library.instance.SearchByElement);
+            commands.Add("skilluser", Library.instance.SearchBySkillUser);
+            commands.Add("skilltarget", Library.instance.SearchBySkillTarget);
+            commands.Add("skillcheck", Library.instance.SearchBySkillCheck);
+            commands.Add("reload", ReloadData);
+            commands.Add("roll", Dice.instance.RollDice);
+            commands.Add("rollstats", Dice.instance.rollStats);
+            commands.Add("restart", ExitCheck);
+            commands.Add("virus", VirusCompendium.instance.SendVirus);
+            commands.Add("cr", VirusCompendium.instance.SendCR);
+            commands.Add("encounter", VirusCompendium.instance.RandomEncounter);
+            commands.Add("viruselement", VirusCompendium.instance.SendVirusElements);
+            commands.Add("help", SendHelpMessage);
             //await ChipImages.Instance.loadChipImages();
             await _client.LoginAsync(TokenType.Bot, config.instance.Token);
             await _client.StartAsync();
@@ -92,10 +113,21 @@ namespace csharp
             {
                 return;
             }
-            switch (args[0])
+
+            if(!commands.TryGetValue(args[0], out var func))
+            {
+                await Library.instance.SendChip(message, args);
+                return;
+            }
+
+            await func.Invoke(message, args);
+            return;
+
+
+            /*switch (args[0])
             {
                 case "die":
-                    await ExitCheck(message, RestartOptions.exit);
+                    await ExitCheck(message, args);
                     break;
                 case "chip":
                     await Library.instance.SendChip(message, args);
@@ -119,16 +151,16 @@ namespace csharp
                     await Library.instance.SearchBySkillTarget(message, args);
                     break;
                 case "reload":
-                    ReloadData(message);
+                    await ReloadData(message, args);
                     break;
                 case "roll":
                     await Dice.instance.RollDice(message, args);
                     break;
                 case "rollstats":
-                    await Dice.instance.rollStats(message);
+                    await Dice.instance.rollStats(message, args);
                     break;
                 case "restart":
-                    await ExitCheck(message, RestartOptions.restart);
+                    await ExitCheck(message, args);
                     break;
                 case "virus":
                     await VirusCompendium.instance.SendVirus(message, args);
@@ -143,31 +175,41 @@ namespace csharp
                     await VirusCompendium.instance.SendVirusElements(message, args);
                     break;
                 case "help":
-                    await message.Author.SendMessageAsync(this.HelpText);
+                    await SendHelpMessage(message, args);
                     break;
                 default:
-                    await Library.instance.SendChip(message, args, true);
+                    await Library.instance.SendChip(message, args);
                     break;
-            }
+            }*/
         }
 
-        private async Task ExitCheck(SocketMessage message, RestartOptions option)
+        private async Task ExitCheck(SocketMessage message, string[] args)
         {
-            if (message.Author.Id == config.instance.MajorIDConverted || message.Author.Id == config.instance.JinIDConverted)
+            if (message.Author.Id != config.instance.MajorIDConverted && message.Author.Id != config.instance.JinIDConverted)
+            {
+                await message.Channel.SendMessageAsync("You do not have permission to do this, if this is in error, inform Major");
+                return;
+            }
+            if (args[0].ToLower() == "restart")
             {
                 await _client.SetStatusAsync(UserStatus.Invisible);
                 Dice.instance.Dispose();
-                System.Environment.Exit((int)option);
+                System.Environment.Exit((int)RestartOptions.restart);
             }
-            else
+            else if (args[0].ToLower() == "die")
             {
-                await message.Channel.SendMessageAsync("You do not have permission to do this, if this is in error, inform Major");
+                await _client.SetStatusAsync(UserStatus.Invisible);
+                Dice.instance.Dispose();
+                System.Environment.Exit((int)RestartOptions.restart);
             }
         }
 
-        private Task[] ReloadData(SocketMessage message = null)
+        private async Task SendHelpMessage(SocketMessage message, string[] args = null) =>
+            await message.Author.SendMessageAsync(this.HelpText);
+
+        private Task ReloadData(SocketMessage message = null, string[] args = null)
         {
-            if(message != null && message.Author.Id != config.instance.JinIDConverted 
+            if (message != null && message.Author.Id != config.instance.JinIDConverted
                 && message.Author.Id != config.instance.MajorIDConverted)
             {
                 message.Author.SendMessageAsync("You do not have permission to do this, if you think this is in error, inform Major.");
@@ -208,7 +250,7 @@ namespace csharp
                                 }
                             });
 
-            return toReturn;
+            return Task.WhenAll(toReturn);
         }
 
     }

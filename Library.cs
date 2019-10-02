@@ -122,14 +122,10 @@ namespace csharp
 
         }
 
-        public async Task SendChip(Discord.WebSocket.SocketMessage message, string[] args, bool defaultArg = false)
+        public async Task SendChip(Discord.WebSocket.SocketMessage message, string[] args)
         {
-            if(!defaultArg && args.Length < 2)
-            {
-                await message.Channel.SendMessageAsync("You must specify a BattleChip name");
-                return;
-            }
-            string name = defaultArg ? args[0] : args[1];
+            
+            string name = (args.Length < 2) ? args[0] : args[1];
             bool exists = this.chipLibrary.TryGetValue(name.ToLower(), out chip Value);
 
             if (exists)

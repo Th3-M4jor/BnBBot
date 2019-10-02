@@ -45,7 +45,7 @@ namespace csharp
             die.Dispose();
         }
 
-        public async Task rollStats(SocketMessage message)
+        public async Task rollStats(SocketMessage message, string[] args = null)
         {
             long[] rolls = new long[4];
             long[] stats = new long[6];
