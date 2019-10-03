@@ -200,7 +200,7 @@ namespace csharp
             {
                 await _client.SetStatusAsync(UserStatus.Invisible);
                 Dice.instance.Dispose();
-                System.Environment.Exit((int)RestartOptions.restart);
+                System.Environment.Exit((int)RestartOptions.exit);
             }
         }
 
