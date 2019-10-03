@@ -116,9 +116,9 @@ namespace csharp
 
             if (exists)
             {
-                await message.Channel.SendMessageAsync("```" + Value.Name + " - ( " + Value.EBCost + " EB ) - " + Value.Color +
+                await message.Channel.SendMessageAsync("```" + Value.Name + " - (" + Value.EBCost + " EB) - " + Value.Color +
                                                         "\n" + Value.Description + "```");
-                //await sendChipAsEmbed(message, Value);
+                
                 return;
             }
 
@@ -130,17 +130,17 @@ namespace csharp
             {
                 case 0:
                     {
-                        //no chips found
+                        //no ncp found
                         await message.Channel.SendMessageAsync("That doesn't exist");
                         return;
                     }
                 case 1:
                     {
-                        //one chip has a name that contains it
+                        //one ncp has a name that contains it
                         this.NCPs.TryGetValue(NCPList[0].ToLower(), out NCP foundVal);
-                        await message.Channel.SendMessageAsync("```" + foundVal.Name + " - ( " + foundVal.EBCost + " EB ) - " + foundVal.Color +
+                        await message.Channel.SendMessageAsync("```" + foundVal.Name + " - (" + foundVal.EBCost + " EB) - " + foundVal.Color +
                                                         "\n" + foundVal.Description + "```");
-                        //await sendChipAsEmbed(message, foundVal);
+                        
                         return;
                     }
 
