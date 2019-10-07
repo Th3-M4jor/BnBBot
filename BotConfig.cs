@@ -34,6 +34,13 @@ namespace csharp
             }
         }
 
+
+        [JsonProperty("dbPasswd")]
+        public string DBPass
+        {
+            get; set;
+        }
+
         public ulong MajorIDConverted { get; private set; }
 
         public ulong JinIDConverted { get; private set; }

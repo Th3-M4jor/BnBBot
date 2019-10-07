@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Discord;
 using Discord.WebSocket;
 using System.IO;
 using System.Linq;
+
+using MySql.Data;
+using MySql.Data.MySqlClient;
 
 namespace csharp
 {
@@ -17,6 +21,9 @@ namespace csharp
     public class Program
     {
         private static DiscordSocketClient _client;
+
+
+        private const string connStr = "server=spartan364.hopto.org;user=Cougartalk;database=BnBData;port=3306;password=";
 
         private static bool sentStartupMessage = false;
 
@@ -31,7 +38,10 @@ namespace csharp
             _client = new DiscordSocketClient();
 
             _client.Log += Log;
-
+            //MySql.Data.MySqlClient.MySqlConnection conn = new MySqlConnection(connStr + config.instance.DBPass);
+            //await conn.OpenAsync();
+            //Console.WriteLine(conn.Ping());
+            //await conn.CloseAsync();
             //await Library.instance.loadChips();
             //await NCPLibrary.instance.loadNCPs();
             //var tasks = ReloadData();
