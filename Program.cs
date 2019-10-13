@@ -139,7 +139,7 @@ namespace csharp
                 {
                     await func.Invoke(message, args);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
 #if DEBUG
                     await message.Channel.SendMessageAsync(e.Message);
@@ -160,18 +160,17 @@ namespace csharp
                 return;
             }
 
-            await botMusic.instance.LeaveAll();
+            botMusic.instance.Dispose();
+            Dice.instance.Dispose();
 
             if (args[0].ToLower() == "restart")
             {
                 await _client.SetStatusAsync(UserStatus.Invisible);
-                Dice.instance.Dispose();
                 System.Environment.Exit((int)RestartOptions.restart);
             }
-            else if (args[0].ToLower() == "die")
+            else
             {
                 await _client.SetStatusAsync(UserStatus.Invisible);
-                Dice.instance.Dispose();
                 System.Environment.Exit((int)RestartOptions.exit);
             }
         }
