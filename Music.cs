@@ -31,6 +31,22 @@ namespace csharp
             voiceChannels = new ConcurrentDictionary<ulong, SocketVoiceChannel>();
         }
 
+        public async Task LeaveAll()
+        {
+            foreach (var conn in voiceConnections)
+            {
+                await conn.Value.StopAsync();
+                conn.Value.Dispose();
+                voiceConnections.Remove(conn.Key, out _);
+            }
+
+            foreach (var channel in voiceChannels)
+            {
+                await channel.Value.DisconnectAsync();
+                voiceChannels.Remove(channel.Key, out _);
+            }
+        }
+
         public async Task JoinVoiceChannel(SocketMessage message, string[] args)
         {
 
@@ -100,11 +116,19 @@ namespace csharp
             }
 
             // Create FFmpeg using the previous example
-            using (var ffmpeg = CreateStream("~/Lock and Load.mp3"))
+            using (var ffmpeg = CreateStream("/home/spartan364/LockAndLoad.mp3"))
             using (var output = ffmpeg.StandardOutput.BaseStream)
             using (var discord = conn.CreatePCMStream(AudioApplication.Mixed))
             {
                 try { await output.CopyToAsync(discord); }
+                catch (Exception e)
+                {
+#if !DEBUG
+                    await message.Channel.SendMessageAsync(e.Message);
+#else
+                    await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Info, "music", e.Message, e));
+#endif
+                }
                 finally { await discord.FlushAsync(); }
             }
         }

@@ -51,7 +51,7 @@ namespace csharp
             _client.Ready += botReady;
             commands = new Dictionary<string, Func<SocketMessage, string[], Task>>();
             commands.Add("die", ExitCheck);
-            commands.Add("chip",Library.instance.SendChip);
+            commands.Add("chip", Library.instance.SendChip);
             commands.Add("ncp", NCPLibrary.instance.SendNCP);
             commands.Add("skill", Library.instance.SearchBySkill);
             commands.Add("element", Library.instance.SearchByElement);
@@ -78,7 +78,7 @@ namespace csharp
 
         }
 
-        private Task Log(LogMessage msg)
+        public static Task Log(LogMessage msg)
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
@@ -127,13 +127,28 @@ namespace csharp
                 return;
             }
 
-            if(!commands.TryGetValue(args[0], out var func))
+            if (!commands.TryGetValue(args[0], out var func))
             {
                 await Library.instance.SendChip(message, args);
                 return;
             }
 
-            _ = Task.Run(() => func.Invoke(message, args));
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await func.Invoke(message, args);
+                }
+                catch(Exception e)
+                {
+#if DEBUG
+                    await message.Channel.SendMessageAsync(e.Message);
+                    Console.WriteLine(e.Message);
+#else               
+                    await Log(new Discord.LogMessage(LogSeverity.Error, "command", e.Message, e));
+#endif
+                }
+            });
             return;
         }
 
@@ -144,6 +159,9 @@ namespace csharp
                 await message.Channel.SendMessageAsync("You do not have permission to do this, if this is in error, inform Major");
                 return;
             }
+
+            await botMusic.instance.LeaveAll();
+
             if (args[0].ToLower() == "restart")
             {
                 await _client.SetStatusAsync(UserStatus.Invisible);
