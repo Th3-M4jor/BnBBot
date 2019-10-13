@@ -67,6 +67,9 @@ namespace csharp
             commands.Add("encounter", VirusCompendium.instance.RandomEncounter);
             commands.Add("viruselement", VirusCompendium.instance.SendVirusElements);
             commands.Add("help", SendHelpMessage);
+            commands.Add("join", botMusic.instance.JoinVoiceChannel);
+            commands.Add("leave", botMusic.instance.LeaveVoiceChannel);
+            commands.Add("play", botMusic.instance.PlayMusic);
             //await ChipImages.Instance.loadChipImages();
             await _client.LoginAsync(TokenType.Bot, config.instance.Token);
             await _client.StartAsync();
@@ -130,67 +133,8 @@ namespace csharp
                 return;
             }
 
-            await func.Invoke(message, args);
+            _ = Task.Run(() => func.Invoke(message, args));
             return;
-
-
-            /*switch (args[0])
-            {
-                case "die":
-                    await ExitCheck(message, args);
-                    break;
-                case "chip":
-                    await Library.instance.SendChip(message, args);
-                    break;
-                case "ncp":
-                    await NCPLibrary.instance.SendNCP(message, args);
-                    break;
-                case "skill":
-                    await Library.instance.SearchBySkill(message, args);
-                    break;
-                case "element":
-                    await Library.instance.SearchByElement(message, args);
-                    break;
-                case "skilluser":
-                    await Library.instance.SearchBySkillUser(message, args);
-                    break;
-                case "skillcheck":
-                    await Library.instance.SearchBySkillCheck(message, args);
-                    break;
-                case "skilltarget":
-                    await Library.instance.SearchBySkillTarget(message, args);
-                    break;
-                case "reload":
-                    await ReloadData(message, args);
-                    break;
-                case "roll":
-                    await Dice.instance.RollDice(message, args);
-                    break;
-                case "rollstats":
-                    await Dice.instance.rollStats(message, args);
-                    break;
-                case "restart":
-                    await ExitCheck(message, args);
-                    break;
-                case "virus":
-                    await VirusCompendium.instance.SendVirus(message, args);
-                    break;
-                case "cr":
-                    await VirusCompendium.instance.SendCR(message, args);
-                    break;
-                case "encounter":
-                    await VirusCompendium.instance.RandomEncounter(message, args);
-                    break;
-                case "viruselement":
-                    await VirusCompendium.instance.SendVirusElements(message, args);
-                    break;
-                case "help":
-                    await SendHelpMessage(message, args);
-                    break;
-                default:
-                    await Library.instance.SendChip(message, args);
-                    break;
-            }*/
         }
 
         private async Task ExitCheck(SocketMessage message, string[] args)

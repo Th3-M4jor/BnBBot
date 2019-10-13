@@ -122,7 +122,7 @@ namespace csharp
 
         }
 
-        public async Task SendChip(Discord.WebSocket.SocketMessage message, string[] args)
+        public async Task SendChip(SocketMessage message, string[] args)
         {
             
             string name = (args.Length < 2) ? args[0] : args[1];
