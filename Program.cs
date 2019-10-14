@@ -149,7 +149,6 @@ namespace csharp
 #endif
                 }
             });
-            return;
         }
 
         private async Task ExitCheck(SocketMessage message, string[] args)
