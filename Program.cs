@@ -22,7 +22,7 @@ namespace csharp
     {
         private static DiscordSocketClient _client;
 
-
+        public static MySql.Data.MySqlClient.MySqlConnection conn;
         private const string connStr = "server=spartan364.hopto.org;user=Cougartalk;database=BnBData;port=3306;password=";
 
         private static bool sentStartupMessage = false;
@@ -38,9 +38,9 @@ namespace csharp
             _client = new DiscordSocketClient();
 
             _client.Log += Log;
-            //MySql.Data.MySqlClient.MySqlConnection conn = new MySqlConnection(connStr + config.instance.DBPass);
-            //await conn.OpenAsync();
-            //Console.WriteLine(conn.Ping());
+            conn = new MySqlConnection(connStr + config.instance.DBPass);
+            await conn.OpenAsync();
+            Console.WriteLine(conn.Ping());
             //await conn.CloseAsync();
             //await Library.instance.loadChips();
             //await NCPLibrary.instance.loadNCPs();
@@ -161,6 +161,8 @@ namespace csharp
 
             botMusic.instance.Dispose();
             Dice.instance.Dispose();
+            conn?.Dispose();
+            
 
             if (args[0].ToLower() == "restart")
             {

@@ -108,6 +108,15 @@ namespace csharp
                 await message.Channel.SendMessageAsync(reply);
             }
             else System.Console.WriteLine(reply);
+            try
+            {
+                await StoreInDB();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
 #if !DEBUG
             var toConvert = (from kvp in chipLibrary.AsParallel().
                 WithMergeOptions(ParallelMergeOptions.FullyBuffered)
@@ -124,7 +133,7 @@ namespace csharp
 
         public async Task SendChip(SocketMessage message, string[] args)
         {
-            
+
             string name = (args.Length < 2) ? args[0] : args[1];
             bool exists = this.chipLibrary.TryGetValue(name.ToLower(), out chip Value);
 
@@ -193,7 +202,7 @@ namespace csharp
 
         public async Task SearchBySkill(SocketMessage message, string[] args)
         {
-            if(args.Length < 2)
+            if (args.Length < 2)
             {
                 await message.Channel.SendMessageAsync("You must specify a skill name");
                 return;
@@ -344,6 +353,36 @@ namespace csharp
             {
                 return await stream.ReadToEndAsync();
             }
+        }
+
+        private async Task StoreInDB()
+        {
+            var conn = Program.conn;
+            if (conn.State == System.Data.ConnectionState.Closed) return;
+            var TruncCmd = conn.CreateCommand();
+            TruncCmd.CommandText = "TRUNCATE BattleChips";
+            await TruncCmd.ExecuteNonQueryAsync();
+            var insertChip = conn.CreateCommand();
+            insertChip.CommandText = "INSERT INTO BattleChips (`Name`, `Element`, `Skill`, `Range`, `Damage`, `Hits`, `ChipType`, " +
+                                        "`Description`, `SkillTarget`, `SkillUser`) VALUES " +
+                                        " ( @Name, @Element, @Skill, @Range, @Damage, @Hits, @ChipType, " +
+                                        "@Description, @SkillTarget, @SkillUser)";
+            await insertChip.PrepareAsync();
+            foreach (var chip in this.chipLibrary)
+            {
+                insertChip.Parameters.AddWithValue("@Name", chip.Value.Name);
+                insertChip.Parameters.AddWithValue("@Element", String.Join(", ", chip.Value.Element).ToLower());
+                insertChip.Parameters.AddWithValue("@Skill", String.Join(", ", chip.Value.Skill).ToLower());
+                insertChip.Parameters.AddWithValue("@Damage", chip.Value.Damage);
+                insertChip.Parameters.AddWithValue("@Hits", chip.Value.Hits);
+                insertChip.Parameters.AddWithValue("@ChipType", chip.Value.Type);
+                insertChip.Parameters.AddWithValue("@Description", chip.Value.Description);
+                insertChip.Parameters.AddWithValue("@SkillTarget", chip.Value.SkillTarget);
+                insertChip.Parameters.AddWithValue("@SkillUser", chip.Value.SkillUser);
+                await insertChip.ExecuteNonQueryAsync();
+                insertChip.Parameters.Clear();
+            }
+
         }
 
     }
