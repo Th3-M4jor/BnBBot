@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -10,9 +11,9 @@ namespace csharp
     {
         /// <summary>Our Random object.  Make it a first-class citizen so that it produces truly *random* results</summary>
         private RNGCryptoServiceProvider r;
+        private FileStream devRand;
 
-        private IntPtr randPtr;
-        private bool randFreed = true;
+        /*private IntPtr randPtr;
 
         [DllImport("./lib/randGen.so")]
         private static extern IntPtr initRand();
@@ -21,23 +22,24 @@ namespace csharp
         private static extern uint getRand(IntPtr randPtr);
 
         [DllImport("./lib/randGen.so")]
-        private static extern void freeRand(IntPtr randPtr);
-
+        private static extern void freeRand(IntPtr randPtr);*/
+        Func<uint> randPtr = null;
 
         public DiceExpression()
         {
             r = new RNGCryptoServiceProvider();
             randPtr = initRand();
-            randFreed = false;
+
         }
 
         public uint getRandNum()
         {
-            if(randFreed == true)
+            if (disposedValue == true)
             {
-                throw new Exception("resource closed");
+                //throw new Exception("resource closed");
+                throw new ObjectDisposedException("DiceExpression");
             }
-            return getRand(randPtr);
+            return randPtr.Invoke();
         }
 
 
@@ -46,7 +48,7 @@ namespace csharp
         /// <returns>result of evaluated string</returns>
         public long R(string s, ref List<long> rolledSoFar)
         {
-            if(randFreed == true)
+            if (disposedValue == true)
             {
                 throw new Exception("resource closed");
             }
@@ -68,12 +70,12 @@ namespace csharp
                 long AmtToRoll = 0;
                 // Die definition is our highest order of precedence
                 var d = a[0].Split('d');
-                if(d.Length == 1)
+                if (d.Length == 1)
                 {
-                    if(long.TryParse(d[0], out long AmtToAdd))
+                    if (long.TryParse(d[0], out long AmtToAdd))
                     {
                         rolledSoFar.Add(AmtToAdd);
-                        return (uint) (toReturn + AmtToAdd); 
+                        return (uint)(toReturn + AmtToAdd);
                     }
                 }
                 // This operand will be our die count, static digits, or else something we don't understand
@@ -110,7 +112,7 @@ namespace csharp
                         int numToAdd = (BitConverter.ToInt32(arrToFill, 0) % f);
                         if (numToAdd < 0) numToAdd *= -1;
                         rolledSoFar.Add(numToAdd + 1);*/
-                        var numToAdd = (getRand(randPtr) % f + 1);
+                        var numToAdd = (randPtr.Invoke() % f + 1);
                         rolledSoFar.Add(numToAdd);
 
                         u += numToAdd;
@@ -122,11 +124,77 @@ namespace csharp
             return toReturn;
         }
 
+        private uint getRandLinux()
+        {
+            Span<byte> bytes = stackalloc byte[4];
+            for(int i = 0; i < 4; i++)
+            {
+                bytes[i] = (byte) devRand.ReadByte();
+            }
+            return BitConverter.ToUInt32(bytes);
+        }
+
+        private uint getRandWindows()
+        {
+            Span<byte> bytes = stackalloc byte[4];
+            r.GetBytes(bytes);
+            return BitConverter.ToUInt32(bytes);
+        }
+
+        private Func<uint> initRand()
+        {
+            if(File.Exists("/dev/random"))
+            {
+                Console.WriteLine("using /dev/random");
+                devRand = File.OpenRead("/dev/random");
+                return getRandLinux;
+            }
+            else
+            {
+                Console.WriteLine("No /dev/random using alternative");
+                r = new RNGCryptoServiceProvider();
+                return getRandWindows;
+            }
+        }
+
+        
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    r?.Dispose();
+                    devRand?.Dispose();
+                    // TODO: dispose managed state (managed objects).
+                }
+                //freeRand(randPtr);
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        ~DiceExpression()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
+        }
+
+        // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
-            if(randFreed == true) return; //already disposed
-            freeRand(randPtr);
-            randFreed = true;
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            GC.SuppressFinalize(this);
         }
+        #endregion
     }
 }

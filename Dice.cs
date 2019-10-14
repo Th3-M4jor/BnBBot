@@ -27,8 +27,8 @@ namespace csharp
             var toRoll = string.Join(' ', joinedArgs).ToLower();
             List<long> totalRolls = new List<long>();
             long result = die.R(toRoll, ref totalRolls);
-            string eachRoll = string.Join(", " , totalRolls.Select(x => x.ToString()).ToArray());
-            if(eachRoll.Length > 1900)
+            string eachRoll = string.Join(", ", totalRolls.Select(x => x.ToString()).ToArray());
+            if (eachRoll.Length > 1900)
             {
                 eachRoll = "There were too many die rolls to show the result of each one";
             }
@@ -38,11 +38,6 @@ namespace csharp
         public uint getRandomNum()
         {
             return die.getRandNum();
-        }
-
-        public void Dispose()
-        {
-            die.Dispose();
         }
 
         public async Task rollStats(SocketMessage message, string[] args = null)
@@ -59,9 +54,9 @@ namespace csharp
                 }
                 int toSkip = findIndexOfSmallest(ref rolls);
                 long sum = 0;
-                for(int j = 0; j < 4; j++)
+                for (int j = 0; j < 4; j++)
                 {
-                    if(j == toSkip) continue;
+                    if (j == toSkip) continue;
                     sum += rolls[j];
                 }
                 stats[i] = sum;
@@ -81,11 +76,47 @@ namespace csharp
             for (int i = 1; i < toCheck.Length; i++)
             {
                 //if (toCheck[i] < toCheck[index])
-                if(toCheck[i].CompareTo(toCheck[index]) < 0)
+                if (toCheck[i].CompareTo(toCheck[index]) < 0)
                     index = i;
             }
             return index;
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    die.Dispose();
+                    // TODO: dispose managed state (managed objects).
+                }
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        ~Dice()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            GC.SuppressFinalize(this);
+        }
+        #endregion
 
     }
 }
