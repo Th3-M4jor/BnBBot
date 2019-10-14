@@ -16,6 +16,8 @@ namespace csharp
         private static Lazy<botMusic> lazy = new Lazy<botMusic>(() => new botMusic());
 
         private ConcurrentDictionary<ulong, IAudioClient> voiceConnections;
+
+        private ConcurrentDictionary<ulong, Queue<string>> playQueuePerserver;
         private ConcurrentDictionary<ulong, SocketVoiceChannel> voiceChannels;
 
         public static botMusic instance
@@ -89,7 +91,7 @@ namespace csharp
 
             if (!voiceConnections.TryGetValue(messageAuthor.Guild.Id, out var conn))
             {
-                await message.Channel.SendMessageAsync("I'm not in a voice channel");
+                await message.Channel.SendMessageAsync("I'm already not in a voice channel");
                 return;
             }
 
@@ -111,8 +113,8 @@ namespace csharp
 
             if (!voiceConnections.TryGetValue(messageAuthor.Guild.Id, out var conn))
             {
-                await message.Channel.SendMessageAsync("I'm not in a voice channel");
-                return;
+                //await message.Channel.SendMessageAsync("I'm not in a voice channel, joining...");
+                await this.JoinVoiceChannel(message, args);
             }
 
             // Create FFmpeg using the previous example
