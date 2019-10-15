@@ -73,10 +73,10 @@ namespace csharp
                     res.Groups[6].Success ?
                         res.Groups[6].ToString() : "Standard", //type
                     res.Groups[2]
-                       .ToString()
+                       .ToString().Trim()
                        .Split(", "), //element
                     res.Groups[3]
-                       .ToString()
+                       .ToString().Trim()
                        .Split(", "), //skill
                     chipList[i + 1], //description
                     chipList[i]
@@ -115,6 +115,7 @@ namespace csharp
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
 
 #if !DEBUG
@@ -368,11 +369,14 @@ namespace csharp
                                         " ( @Name, @Element, @Skill, @Range, @Damage, @Hits, @ChipType, " +
                                         "@Description, @SkillTarget, @SkillUser)";
             await insertChip.PrepareAsync();
-            foreach (var chip in this.chipLibrary)
+            
+            foreach (var chip in chipLibrary)
             {
+                //Console.WriteLine(chip.Name);
                 insertChip.Parameters.AddWithValue("@Name", chip.Value.Name);
-                insertChip.Parameters.AddWithValue("@Element", String.Join(", ", chip.Value.Element).ToLower());
-                insertChip.Parameters.AddWithValue("@Skill", String.Join(", ", chip.Value.Skill).ToLower());
+                insertChip.Parameters.AddWithValue("@Element", String.Join(",", chip.Value.Element).ToLower());
+                insertChip.Parameters.AddWithValue("@Skill", String.Join(",", chip.Value.Skill).ToLower());
+                insertChip.Parameters.AddWithValue("@Range", chip.Value.Range);
                 insertChip.Parameters.AddWithValue("@Damage", chip.Value.Damage);
                 insertChip.Parameters.AddWithValue("@Hits", chip.Value.Hits);
                 insertChip.Parameters.AddWithValue("@ChipType", chip.Value.Type);
