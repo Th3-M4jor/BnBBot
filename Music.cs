@@ -17,8 +17,10 @@ namespace csharp
 
         private ConcurrentDictionary<ulong, IAudioClient> voiceConnections;
 
-        private ConcurrentDictionary<ulong, Queue<string>> playQueuePerserver;
+        private ConcurrentDictionary<ulong, ConcurrentQueue<string>> playQueuePerserver;
         private ConcurrentDictionary<ulong, SocketVoiceChannel> voiceChannels;
+
+         private ConcurrentDictionary<ulong, Task> serverDispatchers;
 
         public static botMusic instance
         {
@@ -31,10 +33,19 @@ namespace csharp
         {
             voiceConnections = new ConcurrentDictionary<ulong, IAudioClient>();
             voiceChannels = new ConcurrentDictionary<ulong, SocketVoiceChannel>();
+            playQueuePerserver = new ConcurrentDictionary<ulong, ConcurrentQueue<string>>();
+            serverDispatchers = new ConcurrentDictionary<ulong, Task>();
+            
+            if (!Directory.Exists(Directory.GetCurrentDirectory() + "/" + "Music"))
+            {
+                Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/" + "Music");
+            }
+
         }
 
         public async Task LeaveAll()
         {
+
             foreach (var conn in voiceConnections)
             {
                 await conn.Value.StopAsync();
@@ -115,24 +126,86 @@ namespace csharp
             {
                 //await message.Channel.SendMessageAsync("I'm not in a voice channel, joining...");
                 await this.JoinVoiceChannel(message, args);
+                if (!voiceConnections.ContainsKey(messageAuthor.Guild.Id))
+                {
+                    return;
+                }
             }
 
-            // Create FFmpeg using the previous example
-            using (var ffmpeg = CreateStream("/home/spartan364/LockAndLoad.mp3"))
-            using (var output = ffmpeg.StandardOutput.BaseStream)
-            using (var discord = conn.CreatePCMStream(AudioApplication.Mixed))
+            if (!Uri.TryCreate(args[1], UriKind.Absolute, out _))
             {
-                try { await output.CopyToAsync(discord); }
-                catch (Exception e)
+                await message.Channel.SendMessageAsync("That is not a valid youtube URL");
+                return;
+            }
+            bool startDispatcher = playQueuePerserver.ContainsKey(messageAuthor.Guild.Id);
+            await message.Channel.SendMessageAsync("adding to queue...");
+            var playQueue = playQueuePerserver.GetOrAdd(messageAuthor.Guild.Id, new ConcurrentQueue<string>());
+            playQueue.Enqueue(args[1]);
+            if(serverDispatchers.TryGetValue(messageAuthor.Guild.Id, out var dispatcher))
+            {
+                if(dispatcher.IsCompleted) serverDispatchers.Remove(messageAuthor.Guild.Id, out _);
+                else return;
+            }
+            var toAddDispatcher = BeginDispatcher(messageAuthor.Guild.Id);
+            serverDispatchers.TryAdd(messageAuthor.Guild.Id, toAddDispatcher);
+
+        }
+
+        private Task BeginDispatcher(ulong guildID)
+        {
+            return Task.Run(async () =>
+            {
+                if (!voiceConnections.TryGetValue(guildID, out var conn))
                 {
+                    await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Error, "music", "no voice connection"));
+                    return;
+                }
+                playQueuePerserver.TryGetValue(guildID, out var queue);
+                Process ffmpeg;
+                Stream output;
+                AudioOutStream discord;
+                Console.WriteLine(queue.Count);
+                while (!queue.IsEmpty)
+                {
+                    queue.TryDequeue(out var toDownload);
+                    Console.WriteLine("Downloading " + toDownload);
+                    DownloadVideo(toDownload, guildID.ToString()).WaitForExit();
+
+                    using (ffmpeg = CreateStream(Directory.GetCurrentDirectory() + "/" + "Music/" + guildID.ToString() + ".m4a"))
+                    using (output = ffmpeg.StandardOutput.BaseStream)
+                    using (discord = conn.CreatePCMStream(AudioApplication.Mixed))
+                    {
+                        
+                        try { await output.CopyToAsync(discord); }
+                        catch (Exception e)
+                        {
 #if !DEBUG
                     await message.Channel.SendMessageAsync(e.Message);
 #else
-                    await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Info, "music", e.Message, e));
+                            await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Info, "music", e.Message, e));
 #endif
+                        }
+                        finally { await discord.FlushAsync(); }
+                    }
                 }
-                finally { await discord.FlushAsync(); }
+            });
+        }
+
+        private Process DownloadVideo(string url, string fname)
+        {
+
+            fname = Directory.GetCurrentDirectory() + "/" + "Music/" + fname;
+            if(File.Exists(fname))
+            {
+                File.Delete(fname);
             }
+            return Process.Start(new ProcessStartInfo
+            {
+                FileName = "youtube-dl",
+                Arguments = $"{url} -x -o {fname}.m4a",
+                UseShellExecute = true,
+                RedirectStandardOutput = false,
+            });
         }
 
         private Process CreateStream(string path)
@@ -156,7 +229,7 @@ namespace csharp
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects).
-                    
+
                 }
                 LeaveAll().Wait();
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
@@ -169,8 +242,8 @@ namespace csharp
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         ~botMusic()
         {
-           // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-           Dispose(false);
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(false);
         }
 
         // This code added to correctly implement the disposable pattern.
