@@ -8,6 +8,7 @@ using Discord.WebSocket;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
+using System.Threading;
 
 namespace csharp
 {
@@ -20,7 +21,8 @@ namespace csharp
         private ConcurrentDictionary<ulong, ConcurrentQueue<string>> playQueuePerserver;
         private ConcurrentDictionary<ulong, SocketVoiceChannel> voiceChannels;
 
-         private ConcurrentDictionary<ulong, Task> serverDispatchers;
+        private ConcurrentDictionary<ulong, Task> serverDispatchers;
+        private ConcurrentDictionary<ulong, CancellationTokenSource> dispatcherCancelTokens;
 
         public static botMusic instance
         {
@@ -35,7 +37,8 @@ namespace csharp
             voiceChannels = new ConcurrentDictionary<ulong, SocketVoiceChannel>();
             playQueuePerserver = new ConcurrentDictionary<ulong, ConcurrentQueue<string>>();
             serverDispatchers = new ConcurrentDictionary<ulong, Task>();
-            
+            dispatcherCancelTokens = new ConcurrentDictionary<ulong, CancellationTokenSource>();
+
             if (!Directory.Exists(Directory.GetCurrentDirectory() + "/" + "Music"))
             {
                 Directory.CreateDirectory(Directory.GetCurrentDirectory() + "/" + "Music");
@@ -141,20 +144,22 @@ namespace csharp
             await message.Channel.SendMessageAsync("adding to queue...");
             var playQueue = playQueuePerserver.GetOrAdd(messageAuthor.Guild.Id, new ConcurrentQueue<string>());
             playQueue.Enqueue(args[1]);
-            if(serverDispatchers.TryGetValue(messageAuthor.Guild.Id, out var dispatcher))
+            if (serverDispatchers.TryGetValue(messageAuthor.Guild.Id, out var dispatcher))
             {
-                if(dispatcher.IsCompleted) serverDispatchers.Remove(messageAuthor.Guild.Id, out _);
+                if (dispatcher.IsCompleted) serverDispatchers.Remove(messageAuthor.Guild.Id, out _);
                 else return;
             }
             var toAddDispatcher = BeginDispatcher(messageAuthor.Guild.Id);
             serverDispatchers.TryAdd(messageAuthor.Guild.Id, toAddDispatcher);
-
         }
 
         private Task BeginDispatcher(ulong guildID)
         {
             return Task.Run(async () =>
             {
+                var token = new CancellationTokenSource();
+                dispatcherCancelTokens.TryAdd(guildID, token);
+
                 if (!voiceConnections.TryGetValue(guildID, out var conn))
                 {
                     await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Error, "music", "no voice connection"));
@@ -167,6 +172,13 @@ namespace csharp
                 Console.WriteLine(queue.Count);
                 while (!queue.IsEmpty)
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        dispatcherCancelTokens.Remove(guildID, out _);
+                        token.Dispose();
+                        token = new CancellationTokenSource();
+                        dispatcherCancelTokens.TryAdd(guildID, token);
+                    }
                     queue.TryDequeue(out var toDownload);
                     Console.WriteLine("Downloading " + toDownload);
                     DownloadVideo(toDownload, guildID.ToString()).WaitForExit();
@@ -175,15 +187,22 @@ namespace csharp
                     using (output = ffmpeg.StandardOutput.BaseStream)
                     using (discord = conn.CreatePCMStream(AudioApplication.Mixed))
                     {
-                        
-                        try { await output.CopyToAsync(discord); }
+                        int blockSize = 3480;
+                        byte[] buffer = new byte[blockSize]; //block size of 3480
+                        try
+                        {
+                            while(true)
+                            {
+                                int byteCount = await output.ReadAsync(buffer, 0, blockSize);
+                                if(byteCount == 0 || token.IsCancellationRequested) break;
+                                await discord.WriteAsync(buffer, 0, byteCount);
+                            }
+                            //await output.CopyToAsync(discord, 81920, token.Token);
+                            discord.Clear();
+                        }
                         catch (Exception e)
                         {
-#if !DEBUG
-                    await message.Channel.SendMessageAsync(e.Message);
-#else
                             await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Info, "music", e.Message, e));
-#endif
                         }
                         finally { await discord.FlushAsync(); }
                     }
@@ -195,7 +214,7 @@ namespace csharp
         {
 
             fname = Directory.GetCurrentDirectory() + "/" + "Music/" + fname;
-            if(File.Exists(fname))
+            if (File.Exists(fname))
             {
                 File.Delete(fname);
             }
