@@ -1,6 +1,6 @@
 namespace csharp
 {
-    public class chip
+    public class Chip
     {
         public string Name { get; private set; }
         public string[] Element { get; private set; }
@@ -21,7 +21,7 @@ namespace csharp
 
         public string SkillUser { get; private set; }
 
-        public chip(string name, string range, string damage, string hits, string type, string[] element, string[] skill, string description, string all, string skillUser, string skillTarget)
+        public Chip(string name, string range, string damage, string hits, string type, string[] element, string[] skill, string description, string all, string skillUser, string skillTarget)
         {
             this.Name = name ?? throw new System.ArgumentNullException();
             this.Range = range ?? throw new System.ArgumentNullException();

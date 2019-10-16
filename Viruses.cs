@@ -52,7 +52,7 @@ namespace csharp
             HighestCR = 0;
         }
 
-        public async Task loadViruses(SocketMessage message = null)
+        public async Task LoadViruses(SocketMessage message = null)
         {
             var newCompendium = new ConcurrentDictionary<string, Virus>();
             List<string> duplicates = new List<string>();

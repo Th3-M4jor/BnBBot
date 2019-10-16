@@ -2,10 +2,11 @@
 using System.Data;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Discord;
-using Discord.WebSocket;
 using System.IO;
 using System.Linq;
+
+using Discord;
+using Discord.WebSocket;
 
 using MySql.Data;
 using MySql.Data.MySqlClient;
@@ -22,7 +23,7 @@ namespace csharp
     {
         private static DiscordSocketClient _client;
 
-        public static MySql.Data.MySqlClient.MySqlConnection conn;
+        public static MySqlConnection conn;
         private const string connStr = "server=spartan364.hopto.org;user=Cougartalk;database=BnBData;port=3306;password=";
 
         private static bool sentStartupMessage = false;
@@ -48,28 +49,30 @@ namespace csharp
             //await Task.WhenAll(tasks);
             await ReloadData();
             _client.MessageReceived += MessageRecieved;
-            _client.Ready += botReady;
-            commands = new Dictionary<string, Func<SocketMessage, string[], Task>>();
-            commands.Add("die", ExitCheck);
-            commands.Add("chip", Library.instance.SendChip);
-            commands.Add("ncp", NCPLibrary.instance.SendNCP);
-            commands.Add("skill", Library.instance.SearchBySkill);
-            commands.Add("element", Library.instance.SearchByElement);
-            commands.Add("skilluser", Library.instance.SearchBySkillUser);
-            commands.Add("skilltarget", Library.instance.SearchBySkillTarget);
-            commands.Add("skillcheck", Library.instance.SearchBySkillCheck);
-            commands.Add("reload", ReloadData);
-            commands.Add("roll", Dice.instance.RollDice);
-            commands.Add("rollstats", Dice.instance.rollStats);
-            commands.Add("restart", ExitCheck);
-            commands.Add("virus", VirusCompendium.instance.SendVirus);
-            commands.Add("cr", VirusCompendium.instance.SendCR);
-            commands.Add("encounter", VirusCompendium.instance.RandomEncounter);
-            commands.Add("viruselement", VirusCompendium.instance.SendVirusElements);
-            commands.Add("help", SendHelpMessage);
-            commands.Add("join", botMusic.instance.JoinVoiceChannel);
-            commands.Add("leave", botMusic.instance.LeaveVoiceChannel);
-            commands.Add("play", botMusic.instance.PlayMusic);
+            _client.Ready += BotReady;
+            commands = new Dictionary<string, Func<SocketMessage, string[], Task>>
+            {
+                { "die", ExitCheck },
+                { "chip", Library.instance.SendChip },
+                { "ncp", NCPLibrary.instance.SendNCP },
+                { "skill", Library.instance.SearchBySkill },
+                { "element", Library.instance.SearchByElement },
+                { "skilluser", Library.instance.SearchBySkillUser },
+                { "skilltarget", Library.instance.SearchBySkillTarget },
+                { "skillcheck", Library.instance.SearchBySkillCheck },
+                { "reload", ReloadData },
+                { "roll", Dice.instance.RollDice },
+                { "rollstats", Dice.instance.RollStats },
+                { "restart", ExitCheck },
+                { "virus", VirusCompendium.instance.SendVirus },
+                { "cr", VirusCompendium.instance.SendCR },
+                { "encounter", VirusCompendium.instance.RandomEncounter },
+                { "viruselement", VirusCompendium.instance.SendVirusElements },
+                { "help", SendHelpMessage },
+                { "join", BotMusic.Instance.JoinVoiceChannel },
+                { "leave", BotMusic.Instance.LeaveVoiceChannel },
+                { "play", BotMusic.Instance.PlayMusic }
+            };
             //await ChipImages.Instance.loadChipImages();
             await _client.LoginAsync(TokenType.Bot, config.instance.Token);
             await _client.StartAsync();
@@ -84,7 +87,7 @@ namespace csharp
             return Task.CompletedTask;
         }
 
-        private async Task botReady()
+        private async Task BotReady()
         {
             await _client.SetGameAsync("%help for a list of commands");
             if (sentStartupMessage)
@@ -105,7 +108,7 @@ namespace csharp
             }
             else
             {
-                message = String.Format("Started with {0} as the restart code", Environment.GetCommandLineArgs()[1]);
+                message = string.Format("Started with {0} as the restart code", Environment.GetCommandLineArgs()[1]);
             }
             await major.SendMessageAsync(message);
             sentStartupMessage = true;
@@ -159,20 +162,20 @@ namespace csharp
                 return;
             }
 
-            botMusic.instance.Dispose();
+            BotMusic.Instance.Dispose();
             Dice.instance.Dispose();
             conn?.Dispose();
-            
+
 
             if (args[0].ToLower() == "restart")
             {
                 await _client.SetStatusAsync(UserStatus.Invisible);
-                System.Environment.Exit((int)RestartOptions.restart);
+                Environment.Exit((int)RestartOptions.restart);
             }
             else
             {
                 await _client.SetStatusAsync(UserStatus.Invisible);
-                System.Environment.Exit((int)RestartOptions.exit);
+                Environment.Exit((int)RestartOptions.exit);
             }
         }
 
@@ -203,7 +206,7 @@ namespace csharp
                             {
                                 try
                                 {
-                                    await NCPLibrary.instance.loadNCPs(message);
+                                    await NCPLibrary.instance.LoadNCPs(message);
                                 }
                                 catch (Exception e)
                                 {
@@ -214,7 +217,7 @@ namespace csharp
                             {
                                 try
                                 {
-                                    await VirusCompendium.instance.loadViruses(message);
+                                    await VirusCompendium.instance.LoadViruses(message);
                                 }
                                 catch (Exception e)
                                 {

@@ -47,11 +47,9 @@ namespace csharp
 
         static config()
         {
-            using (var jsonTextFile = File.OpenText("./config.json"))
-            {
-                string jsonText = jsonTextFile.ReadToEnd();
-                instance = JsonConvert.DeserializeObject<config>(jsonText);
-            }
+            using var jsonTextFile = File.OpenText("./config.json");
+            string jsonText = jsonTextFile.ReadToEnd();
+            instance = JsonConvert.DeserializeObject<config>(jsonText);
         }
 
         private config()

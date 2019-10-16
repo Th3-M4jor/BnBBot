@@ -49,7 +49,7 @@ namespace csharp
             NCPTest = new Regex(NCPRegex, RegexOptions.ECMAScript);
         }
 
-        public async Task loadNCPs(Discord.WebSocket.SocketMessage message = null)
+        public async Task LoadNCPs(SocketMessage message = null)
         {
             ConcurrentDictionary<string, NCP> newNCPLibrary = new ConcurrentDictionary<string, NCP>();
             string document = (await Library.client.GetStringAsync(NCPUrl)).Replace("â€™", "'");
@@ -90,7 +90,7 @@ namespace csharp
             {
                 await message.Channel.SendMessageAsync(reply);
             }
-            else System.Console.WriteLine(reply);
+            else Console.WriteLine(reply);
 #if !DEBUG
             var toConvert = (from kvp in this.NCPs select kvp.Value).OrderBy(aNCP => aNCP.Color).ThenBy(aNCP => aNCP.Name);
             string toWrite = JsonConvert.SerializeObject(toConvert, Formatting.Indented);

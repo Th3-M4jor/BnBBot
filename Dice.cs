@@ -10,7 +10,7 @@ namespace csharp
     {
         public static readonly Dice instance = new Dice();
 
-        private DiceExpression die;
+        private readonly DiceExpression die;
         private Dice()
         {
             die = new DiceExpression();
@@ -40,7 +40,7 @@ namespace csharp
             return die.getRandNum();
         }
 
-        public async Task rollStats(SocketMessage message, string[] args = null)
+        public async Task RollStats(SocketMessage message, string[] args = null)
         {
             long[] rolls = new long[4];
             long[] stats = new long[6];
@@ -52,7 +52,7 @@ namespace csharp
                 {
                     rolls[j] = die.R("1d6", ref ignoreList);
                 }
-                int toSkip = findIndexOfSmallest(ref rolls);
+                int toSkip = FindIndexOfSmallest(ref rolls);
                 long sum = 0;
                 for (int j = 0; j < 4; j++)
                 {
@@ -69,7 +69,7 @@ namespace csharp
 
         }
 
-        private int findIndexOfSmallest<T>(ref T[] toCheck) where T : IComparable<T>
+        private int FindIndexOfSmallest<T>(ref T[] toCheck) where T : IComparable<T>
         {
             int index = 0;
 

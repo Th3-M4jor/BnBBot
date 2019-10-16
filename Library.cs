@@ -21,7 +21,7 @@ namespace csharp
         public const string saveRegexVal = @"an?\s(\w+)\scheck\sof\s\[DC\s\d+\s\+\s(\w+)\]";
         public static readonly Library instance = new Library();
         public static readonly System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
-        private ConcurrentDictionary<string, chip> chipLibrary;
+        private ConcurrentDictionary<string, Chip> chipLibrary;
 
         private readonly Regex chipTest;
 
@@ -30,7 +30,7 @@ namespace csharp
 
         private Library()
         {
-            chipLibrary = new ConcurrentDictionary<string, chip>();
+            chipLibrary = new ConcurrentDictionary<string, Chip>();
             chipTest = new Regex(regexVal, RegexOptions.ECMAScript);
             saveRegexTest = new Regex(saveRegexVal, RegexOptions.ECMAScript);
         }
@@ -38,7 +38,7 @@ namespace csharp
         public async Task LoadChips(Discord.WebSocket.SocketMessage message = null)
         {
             //chipLibrary.Clear();
-            ConcurrentDictionary<string, chip> newChipLibrary = new ConcurrentDictionary<string, chip>();
+            ConcurrentDictionary<string, Chip> newChipLibrary = new ConcurrentDictionary<string, Chip>();
             string chips = (await client.GetStringAsync(ChipUrl)).Replace("â€™", "'");
             chips = Regex.Replace(chips, "[\r]", string.Empty);
             var chipList = chips.Split("\n").ToList();
@@ -65,7 +65,7 @@ namespace csharp
                     skillTarget = skillRes.Groups[1].ToString(); //skill the target uses
                     skillUser = skillRes.Groups[2].ToString(); //skill the user uses
                 }
-                chip toAdd = new chip(
+                Chip toAdd = new Chip(
                     res.Groups[1].ToString(), //name
                     res.Groups[4].ToString(), //range
                     res.Groups[5].ToString(), //damage
@@ -136,7 +136,7 @@ namespace csharp
         {
 
             string name = (args.Length < 2) ? args[0] : args[1];
-            bool exists = this.chipLibrary.TryGetValue(name.ToLower(), out chip Value);
+            bool exists = this.chipLibrary.TryGetValue(name.ToLower(), out Chip Value);
 
             if (exists)
             {
@@ -163,7 +163,7 @@ namespace csharp
                 case 1:
                     {
                         //one chip has a name that contains it
-                        this.chipLibrary.TryGetValue(chipList[0].ToLower(), out chip foundVal);
+                        this.chipLibrary.TryGetValue(chipList[0].ToLower(), out Chip foundVal);
                         await message.Channel.SendMessageAsync("```" + foundVal.All + "```");
                         //await sendChipAsEmbed(message, foundVal);
                         return;
@@ -285,7 +285,7 @@ namespace csharp
             }
         }
 
-        private async Task SendChipAsEmbed(SocketMessage message, chip toSend)
+        private async Task SendChipAsEmbed(SocketMessage message, Chip toSend)
         {
             var embed = new Discord.EmbedBuilder
             {
@@ -300,7 +300,7 @@ namespace csharp
                 embed.Color = new Color(0xF8C8D8);
             }
             MemoryStream imageStream = new MemoryStream();
-            ChipImages.Instance.getElement(toSend.Element).Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
+            ChipImages.Instance.GetElement(toSend.Element).Save(imageStream, System.Drawing.Imaging.ImageFormat.Png);
             //File.WriteAllBytes("./test.png", imageStream.GetBuffer());
             embed.AddField("Element:", String.Join(", ", toSend.Element), true);
             if (toSend.Skill[0] != "--")

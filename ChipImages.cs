@@ -43,7 +43,7 @@ namespace csharp
 
         private Bitmap[] images;
 
-        private Dictionary<string[], Bitmap> combinedImages;
+        private readonly Dictionary<string[], Bitmap> combinedImages;
 
         public static ChipImages Instance
         {
@@ -58,7 +58,7 @@ namespace csharp
             combinedImages = new Dictionary<string[], Bitmap>();
         }
 
-        public async Task loadChipImages()
+        public async Task LoadChipImages()
         {
             images = new Bitmap[elementCount];
             await Task.Run(() => Parallel.For(0, elementCount, async (index) =>
@@ -70,12 +70,12 @@ namespace csharp
             }));
         }
 
-        public Bitmap getElement(string[] elements)
+        public Bitmap GetElement(string[] elements)
         {
             if (images == null) throw new NullReferenceException();
             if (elements.Length == 1)
             {
-                return getElement(elements[0]);
+                return GetElement(elements[0]);
             }
             else
             {
@@ -83,18 +83,18 @@ namespace csharp
                 {
                     return toReturn;
                 }
-                return makeCombinedImage(elements);
+                return MakeCombinedImage(elements);
             }
         }
 
-        public Bitmap makeCombinedImage(string[] elem)
+        public Bitmap MakeCombinedImage(string[] elem)
         {
             Bitmap[] imagesToCombine = new Bitmap[elem.Length];
             int width = 0;
             int height = 0;
             for (int i = 0; i < elem.Length; i++)
             {
-                imagesToCombine[i] = getElement(elem[i]);
+                imagesToCombine[i] = GetElement(elem[i]);
                 width += imagesToCombine[i].Width;
                 if (imagesToCombine[i].Height > height)
                 {
@@ -116,38 +116,24 @@ namespace csharp
             return img3;
         }
 
-        private Bitmap getElement(string elementToGet)
+        private Bitmap GetElement(string elementToGet)
         {
-            switch (elementToGet.ToLower())
+            return (elementToGet.ToLower()) switch
             {
-                case "fire":
-                    return images[0];
-                case "aqua":
-                    return images[1];
-                case "elec":
-                    return images[2];
-                case "wood":
-                    return images[3];
-                case "wind":
-                    return images[4];
-                case "sword":
-                    return images[5];
-                case "break":
-                    return images[6];
-                case "cursor":
-                    return images[7];
-                case "recovery":
-                    return images[8];
-                case "invis":
-                    return images[9];
-                case "object":
-                    return images[10];
-                case "null":
-                    return images[11];
-                default:
-                    throw new ArgumentOutOfRangeException();
-
-            }
+                "fire" => images[0],
+                "aqua" => images[1],
+                "elec" => images[2],
+                "wood" => images[3],
+                "wind" => images[4],
+                "sword" => images[5],
+                "break" => images[6],
+                "cursor" => images[7],
+                "recovery" => images[8],
+                "invis" => images[9],
+                "object" => images[10],
+                "null" => images[11],
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
     }

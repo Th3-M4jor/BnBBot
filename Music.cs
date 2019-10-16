@@ -12,26 +12,26 @@ using System.Threading;
 
 namespace csharp
 {
-    class botMusic : IDisposable
+    class BotMusic : IDisposable
     {
-        private static Lazy<botMusic> lazy = new Lazy<botMusic>(() => new botMusic());
+        private static readonly Lazy<BotMusic> lazy = new Lazy<BotMusic>(() => new BotMusic());
 
-        private ConcurrentDictionary<ulong, IAudioClient> voiceConnections;
+        private readonly ConcurrentDictionary<ulong, IAudioClient> voiceConnections;
 
-        private ConcurrentDictionary<ulong, ConcurrentQueue<string>> playQueuePerserver;
-        private ConcurrentDictionary<ulong, SocketVoiceChannel> voiceChannels;
+        private readonly ConcurrentDictionary<ulong, ConcurrentQueue<string>> playQueuePerserver;
+        private readonly ConcurrentDictionary<ulong, SocketVoiceChannel> voiceChannels;
 
-        private ConcurrentDictionary<ulong, Task> serverDispatchers;
-        private ConcurrentDictionary<ulong, CancellationTokenSource> dispatcherCancelTokens;
+        private readonly ConcurrentDictionary<ulong, Task> serverDispatchers;
+        private readonly ConcurrentDictionary<ulong, CancellationTokenSource> dispatcherCancelTokens;
 
-        public static botMusic instance
+        public static BotMusic Instance
         {
             get
             {
                 return lazy.Value;
             }
         }
-        private botMusic()
+        private BotMusic()
         {
             voiceConnections = new ConcurrentDictionary<ulong, IAudioClient>();
             voiceChannels = new ConcurrentDictionary<ulong, SocketVoiceChannel>();
@@ -140,7 +140,7 @@ namespace csharp
                 await message.Channel.SendMessageAsync("That is not a valid youtube URL");
                 return;
             }
-            bool startDispatcher = playQueuePerserver.ContainsKey(messageAuthor.Guild.Id);
+            playQueuePerserver.ContainsKey(messageAuthor.Guild.Id);
             await message.Channel.SendMessageAsync("adding to queue...");
             var playQueue = playQueuePerserver.GetOrAdd(messageAuthor.Guild.Id, new ConcurrentQueue<string>());
             playQueue.Enqueue(args[1]);
@@ -259,7 +259,7 @@ namespace csharp
         }
 
         // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        ~botMusic()
+        ~BotMusic()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(false);
