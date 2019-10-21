@@ -82,13 +82,13 @@ namespace csharp
                 if (!long.TryParse(d[0].Trim(), out long AmtToRoll))
                     AmtToRoll = 0;
 
-                long f;
 
                 // Multiple definitions ("2d6d8") iterate through left-to-right: (2d6)d8
                 for (long i = 1; i < d.Count(); i++)
                 {
+
                     // If we don't have a right side (face count), assume 6
-                    if (!long.TryParse(d[i].Trim(), out f))
+                    if (!long.TryParse(d[i].Trim(), out long f))
                         f = 6;
 
                     long u = 0;
@@ -145,7 +145,9 @@ namespace csharp
 
         private Func<uint> InitRand()
         {
-            if (File.Exists("/dev/random"))
+            r = new RNGCryptoServiceProvider();
+            return GetRandWindows;
+            /*if (File.Exists("/dev/random"))
             {
                 Console.WriteLine("using /dev/random");
                 //devRand = File.OpenRead("/dev/random");
@@ -156,7 +158,7 @@ namespace csharp
                 Console.WriteLine("No /dev/random using alternative");
                 r = new RNGCryptoServiceProvider();
                 return GetRandWindows;
-            }
+            }*/
         }
 
 
