@@ -35,9 +35,9 @@ namespace csharp
             await message.Channel.SendMessageAsync(string.Format("{0}, you rolled: {1}, ({2})", message.Author.Mention, result, eachRoll));
         }
 
-        public uint getRandomNum()
+        public uint GetRandomNum()
         {
-            return die.getRandNum();
+            return die.GetRandNum();
         }
 
         public async Task RollStats(SocketMessage message, string[] args = null)

@@ -272,7 +272,7 @@ namespace csharp
             string[] chosenViruses = new string[numViruses];
             for (uint i = 0; i < chosenViruses.Length; i++)
             {
-                uint randVal = Dice.instance.getRandomNum() % (uint)toSelect.Length;
+                uint randVal = Dice.instance.GetRandomNum() % (uint)toSelect.Length;
                 chosenViruses[i] = toSelect[randVal];
             }
             await Library.SendStringArrayAsMessage(message, chosenViruses);
@@ -292,7 +292,7 @@ namespace csharp
             string[] chosenViruses = new string[numViruses];
             for (uint i = 0; i < chosenViruses.Length; i++)
             {
-                uint randVal = Dice.instance.getRandomNum() % (uint)toSelect.Length;
+                uint randVal = Dice.instance.GetRandomNum() % (uint)toSelect.Length;
                 chosenViruses[i] = toSelect[randVal];
             }
             await Library.SendStringArrayAsMessage(message, chosenViruses);

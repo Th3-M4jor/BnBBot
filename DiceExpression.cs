@@ -11,7 +11,8 @@ namespace csharp
     {
         /// <summary>Our Random object.  Make it a first-class citizen so that it produces truly *random* results</summary>
         private RNGCryptoServiceProvider r;
-        private FileStream devRand;
+
+        //private FileStream devRand;
 
         /*private IntPtr randPtr;
 
@@ -23,16 +24,16 @@ namespace csharp
 
         [DllImport("./lib/randGen.so")]
         private static extern void freeRand(IntPtr randPtr);*/
-        Func<uint> randPtr = null;
+        private readonly Func<uint> randPtr = null;
 
         public DiceExpression()
         {
             r = new RNGCryptoServiceProvider();
-            randPtr = initRand();
+            randPtr = InitRand();
 
         }
 
-        public uint getRandNum()
+        public uint GetRandNum()
         {
             if (disposedValue == true)
             {
@@ -67,7 +68,6 @@ namespace csharp
             }
             else
             {
-                long AmtToRoll = 0;
                 // Die definition is our highest order of precedence
                 var d = a[0].Split('d');
                 if (d.Length == 1)
@@ -79,7 +79,7 @@ namespace csharp
                     }
                 }
                 // This operand will be our die count, static digits, or else something we don't understand
-                if (!long.TryParse(d[0].Trim(), out AmtToRoll))
+                if (!long.TryParse(d[0].Trim(), out long AmtToRoll))
                     AmtToRoll = 0;
 
                 long f;
@@ -124,40 +124,42 @@ namespace csharp
             return toReturn;
         }
 
-        private uint getRandLinux()
+        private uint GetRandLinux()
         {
             Span<byte> bytes = stackalloc byte[4];
-            for(int i = 0; i < 4; i++)
+            var devRand = File.OpenRead("/dev/random/");
+            for (int i = 0; i < 4; i++)
             {
-                bytes[i] = (byte) devRand.ReadByte();
+                bytes[i] = (byte)devRand.ReadByte();
             }
+            devRand.Dispose();
             return BitConverter.ToUInt32(bytes);
         }
 
-        private uint getRandWindows()
+        private uint GetRandWindows()
         {
             Span<byte> bytes = stackalloc byte[4];
             r.GetBytes(bytes);
             return BitConverter.ToUInt32(bytes);
         }
 
-        private Func<uint> initRand()
+        private Func<uint> InitRand()
         {
-            if(File.Exists("/dev/random"))
+            if (File.Exists("/dev/random"))
             {
                 Console.WriteLine("using /dev/random");
-                devRand = File.OpenRead("/dev/random");
-                return getRandLinux;
+                //devRand = File.OpenRead("/dev/random");
+                return GetRandLinux;
             }
             else
             {
                 Console.WriteLine("No /dev/random using alternative");
                 r = new RNGCryptoServiceProvider();
-                return getRandWindows;
+                return GetRandWindows;
             }
         }
 
-        
+
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
@@ -169,7 +171,7 @@ namespace csharp
                 if (disposing)
                 {
                     r?.Dispose();
-                    devRand?.Dispose();
+                    //devRand?.Dispose();
                     // TODO: dispose managed state (managed objects).
                 }
                 //freeRand(randPtr);
