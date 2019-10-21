@@ -39,9 +39,9 @@ namespace csharp
             _client = new DiscordSocketClient();
 
             _client.Log += Log;
-            conn = new MySqlConnection(connStr + config.instance.DBPass);
-            await conn.OpenAsync();
-            Console.WriteLine(conn.Ping());
+            //conn = new MySqlConnection(connStr + config.instance.DBPass);
+            //await conn.OpenAsync();
+            //Console.WriteLine(conn.Ping());
             //await conn.CloseAsync();
             //await Library.instance.loadChips();
             //await NCPLibrary.instance.loadNCPs();
@@ -68,10 +68,10 @@ namespace csharp
                 { "cr", VirusCompendium.instance.SendCR },
                 { "encounter", VirusCompendium.instance.RandomEncounter },
                 { "viruselement", VirusCompendium.instance.SendVirusElements },
-                { "help", SendHelpMessage },
-                { "join", BotMusic.Instance.JoinVoiceChannel },
-                { "leave", BotMusic.Instance.LeaveVoiceChannel },
-                { "play", BotMusic.Instance.PlayMusic }
+                { "help", SendHelpMessage }
+                //{ "join", BotMusic.Instance.JoinVoiceChannel },
+                //{ "leave", BotMusic.Instance.LeaveVoiceChannel },
+                //{ "play", BotMusic.Instance.PlayMusic }
             };
             //await ChipImages.Instance.loadChipImages();
             await _client.LoginAsync(TokenType.Bot, config.instance.Token);

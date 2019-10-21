@@ -108,7 +108,7 @@ namespace csharp
                 await message.Channel.SendMessageAsync(reply);
             }
             else System.Console.WriteLine(reply);
-            try
+            /*try
             {
                 await StoreInDB();
             }
@@ -116,7 +116,7 @@ namespace csharp
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);
-            }
+            }*/
 
 #if !DEBUG
             var toConvert = (from kvp in chipLibrary.AsParallel().
