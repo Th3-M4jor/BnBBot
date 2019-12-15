@@ -12,7 +12,7 @@ using Discord;
 
 namespace csharp
 {
-    public class NCP
+    public class NCP : IBnBObject
     {
         public string Name { get; private set; }
         public byte EBCost { get; private set; }
@@ -130,8 +130,15 @@ namespace csharp
             {
                 case 0:
                     {
-                        //no ncp found
-                        await message.Channel.SendMessageAsync("That doesn't exist");
+                        var res = (from kvp in NCPs.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
+                                   select Tuple.Create(kvp.Value.Name,
+                                   StringSearch.GetDamerauLevenshteinDistance(name.ToLower(), kvp.Value.Name.ToLower())))
+                        .OrderBy(selector => selector.Item2).Take(5);
+                        var toret = (from tup in res select tup.Item1);
+                        StringBuilder builder = new StringBuilder();
+                        builder.Append("Did you mean: ");
+                        builder.Append(string.Join(", ", toret));
+                        await message.Channel.SendMessageAsync(builder.ToString());
                         return;
                     }
                 case 1:

@@ -157,7 +157,19 @@ namespace csharp
                 case 0:
                     {
                         //no chips found
-                        await message.Channel.SendMessageAsync("That doesn't exist");
+                        //await message.Channel.SendMessageAsync("That doesn't exist");
+                        //return;
+                        //StringSearch.compareMatch(name, chipLibrary);
+
+                        var res = (from kvp in chipLibrary.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
+                                   select Tuple.Create(kvp.Value.Name,
+                                   StringSearch.GetDamerauLevenshteinDistance(name.ToLower(), kvp.Value.Name.ToLower())))
+                        .OrderBy(selector => selector.Item2).Take(5);
+                        var toret = (from tup in res select tup.Item1);
+                        StringBuilder builder = new StringBuilder();
+                        builder.Append("Did you mean: ");
+                        builder.Append(string.Join(", ", toret));
+                        await message.Channel.SendMessageAsync(builder.ToString());
                         return;
                     }
                 case 1:
@@ -369,7 +381,7 @@ namespace csharp
                                         " ( @Name, @Element, @Skill, @Range, @Damage, @Hits, @ChipType, " +
                                         "@Description, @SkillTarget, @SkillUser)";
             await insertChip.PrepareAsync();
-            
+
             foreach (var chip in chipLibrary)
             {
                 //Console.WriteLine(chip.Name);

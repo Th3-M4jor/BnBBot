@@ -1,6 +1,6 @@
 namespace csharp
 {
-    public class Chip
+    public class Chip : IBnBObject
     {
         public string Name { get; private set; }
         public string[] Element { get; private set; }

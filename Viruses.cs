@@ -10,7 +10,7 @@ using Discord.WebSocket;
 
 namespace csharp
 {
-    public class Virus
+    public class Virus : IBnBObject
     {
         public string Name { get; private set; }
 
@@ -171,7 +171,15 @@ namespace csharp
             {
                 case 0:
                     {
-                        await message.Channel.SendMessageAsync("No viruses with that name");
+                        var res = (from kvp in compendium.AsParallel().WithMergeOptions(ParallelMergeOptions.FullyBuffered)
+                                   select Tuple.Create(kvp.Value.Name,
+                                   StringSearch.GetDamerauLevenshteinDistance(name.ToLower(), kvp.Value.Name.ToLower())))
+                        .OrderBy(selector => selector.Item2).Take(5);
+                        var toret = (from tup in res select tup.Item1);
+                        StringBuilder builder = new StringBuilder();
+                        builder.Append("Did you mean: ");
+                        builder.Append(string.Join(", ", toret));
+                        await message.Channel.SendMessageAsync(builder.ToString());
                         return;
                     }
                 case 1:
